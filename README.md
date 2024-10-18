@@ -2,6 +2,7 @@
 
 This README will guide you through the steps to install the project locally and deploy it on OpenShift or IBM Code Engine. Additionally, you will learn how to access the Swagger documentation once the project is deployed.
 
+For this application to retrieve the proper prompts, you will need to create prompt templates and prompote them to a deployment space withing watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
 ## How to Install Locally
 
 To install this project locally, follow these steps:
@@ -9,13 +10,13 @@ To install this project locally, follow these steps:
 1. **Clone this repository**
 
 
-2. **Navigate to the project directory:**
+1. **Navigate to the project directory:**
 
     ```bash
     cd <your-project>
     ```
 
-3. **Create the Enviroment, Activate it, and Install Requirements:**
+1. **Create the Enviroment, Activate it, and Install Requirements:**
 
     Python Virtual Environment
 
@@ -25,20 +26,20 @@ To install this project locally, follow these steps:
     python -m pip install -r requirements.txt
     ```
 
-4. **Update your secrets:**
+1. **Update your secrets:**
 
     Copy `env` to `.env` and fill in the variables with your url, passwords, and apikeys.
 
     *Note*: `COS_IBM_CLOUD_API_KEY` and `IBM_CLOUD_API_KEY` are not the same key. 
 
-5. **Start the project:**
+1. **Start the project:**
 
     ```bash
     python prereqs.py # This only needs to be run once
     python app.py
     ```
 
-6. **URL access:**
+1. **URL access:**
 
     The url, for purposes of using cURL is http://0.0.0.0:4050.
 
