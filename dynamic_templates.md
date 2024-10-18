@@ -10,9 +10,9 @@ Follow the steps below to promote the prompt template to deployment space
    ![prompt template](./assets/prompt_template.png)
 
 1. To be able to promote this as a template, we need to create a prompt variable within the prompt.  This can be anything like `userid`.  Click on `{#}` button on top right and create the `userid` prompt variable.  To refer to the prompt variable in the prompt use `{userid}`. 
- 
 
 1. Go back to the project and click on three dots (ellipsis) in front of prompt template. Click on **Promote to space**. 
+
 
 
 1. If you don’t have a target deployment space, create a new deployment space. Enter all the details as shown below. 
@@ -22,7 +22,7 @@ Follow the steps below to promote the prompt template to deployment space
 
 
 1. Click on hamburger menu on top of IBM watsonx. Select **Deployments**. 
- 
+
 
 1. Click on the deployment space you created above
 
