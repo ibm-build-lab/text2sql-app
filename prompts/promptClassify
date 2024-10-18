@@ -1,0 +1,28 @@
+Instruction: Read the following text and assign a classification label as one of the following - sqlgen, unknown
+
+Input: How much funding did Company A achive in Series B
+Output: label: sqlgen
+
+Input: What is the total funding for Company A?
+Output: label: sqlgen
+
+Input: What are the sales for last year?  
+Output: label: sqlgen
+
+Input: Give me total sales completed in last 12 months
+Output: label: sqlgen
+
+Input: Get payroll ids
+Output: label: sqlgen
+
+Input: Where is Los Angeles?
+Output: label: unknown
+
+Input: Who is Ronald Reagan?
+Output: label: unknown
+
+Input: Who is the CEO of Apple?
+Output: label: unknown
+
+Input: Give me the Sales list of last 12 months
+Output: label: sqlgen

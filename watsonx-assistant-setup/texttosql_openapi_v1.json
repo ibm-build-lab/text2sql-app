@@ -1,0 +1,386 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "FastAPI",
+      "version": "0.1.0",
+      "description": "Text To SQL Generation apis"
+    },
+    "servers": [
+      {
+          "url": "https://{route_url}",
+          "description": "The Route to the application hosting the texttosql application",
+          "variables": {
+            "route_url": {
+              "default": "sequifi-app.1kapx3mznu7r.ca-tor.codeengine.appdomain.cloud",
+              "description": "The portion of the Route URL that follows https://"
+            }
+          }
+      }
+    ],
+    "paths": {
+      "/texttosql": {
+        "post": {
+          "description": "Generate and run SQL queries",
+          "summary": "texttosql",
+          "operationId": "texttosql_texttosql_post",
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/texttosqlResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/texttosqlRequest"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "APIKeyHeader": []
+            }
+          ]
+        }
+      },
+      "/classify": {
+        "post": {
+          "description": "Classify questions as gensql or unknown",
+          "summary": "classify",
+          "operationId": "classify_classify_post",
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/classifyResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/classifyRequest"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "APIKeyHeader": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "APIKeyHeader": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "APP-API-Key"
+        }
+      },
+      "schemas": {
+        "texttosqlLLMParams": {
+          "type": "object",
+          "properties": {
+            "model_id": {
+              "type": "string",
+              "title": "Model Id",
+              "default": "ibm/granite-8b-code-instruct"
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Inputs",
+              "default": []
+            },
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "decoding_method": {
+                  "type": "string",
+                  "title": "Decoding Method",
+                  "default": "greedy"
+                },
+                "min_new_tokens": {
+                  "type": "integer",
+                  "title": "Min New Tokens",
+                  "default": 1
+                },
+                "max_new_tokens": {
+                  "type": "integer",
+                  "title": "Max New Tokens",
+                  "default": 500
+                },
+                "repetition_penalty": {
+                  "type": "number",
+                  "title": "Repetition Penalty",
+                  "default": 1.1
+                },
+                "temperature": {
+                  "type": "number",
+                  "title": "Temperature",
+                  "default": 0.7
+                },
+                "top_k": {
+                  "type": "integer",
+                  "title": "Top K",
+                  "default": 50
+                },
+                "top_p": {
+                  "type": "integer",
+                  "title": "Top P",
+                  "default": 1
+                },
+                "moderations": {
+                  "type": "object",
+                  "properties": {
+                    "hap_input": {
+                      "type": "string",
+                      "title": "Hap Input",
+                      "default": "true"
+                    },
+                    "threshold": {
+                      "type": "number",
+                      "title": "Threshold",
+                      "default": 0.75
+                    },
+                    "hap_output": {
+                      "type": "string",
+                      "title": "Hap Output",
+                      "default": "true"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "title": "texttosqlLLMParams"
+        },
+        "texttosqlRequest": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "title": "Question"
+            },
+            "dbtype": {
+              "type": "string",
+              "title": "Database Type",
+              "default": "MYSQL"
+            },
+            "user_id": {
+              "type": "integer",
+              "title": "User Id",
+              "default": ""
+            },
+            "llm_params": {
+              "$ref": "#/components/schemas/texttosqlLLMParams"
+            }
+          },
+          "required": [
+            "question","dbtype","user_id"
+          ],
+          "title": "texttosqlRequest"
+        },
+        "texttosqlResponse": {
+          "type": "object",
+          "properties": {
+            "response": {
+              "type": "string",
+              "title": "Response"
+            }
+          },
+          "required": [
+            "response"
+          ],
+          "title": "texttosqlResponse"
+        },
+        "classifyLLMParams": {
+          "type": "object",
+          "properties": {
+            "model_id": {
+              "type": "string",
+              "title": "Model Id",
+              "default": "meta-llama/llama-3-70b-instruct"
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Inputs",
+              "default": []
+            },
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "decoding_method": {
+                  "type": "string",
+                  "title": "Decoding Method",
+                  "default": "greedy"
+                },
+                "min_new_tokens": {
+                  "type": "integer",
+                  "title": "Min New Tokens",
+                  "default": 1
+                },
+                "max_new_tokens": {
+                  "type": "integer",
+                  "title": "Max New Tokens",
+                  "default": 500
+                },
+                "repetition_penalty": {
+                  "type": "number",
+                  "title": "Repetition Penalty",
+                  "default": 1.1
+                },
+                "temperature": {
+                  "type": "number",
+                  "title": "Temperature",
+                  "default": 0.7
+                },
+                "top_k": {
+                  "type": "integer",
+                  "title": "Top K",
+                  "default": 50
+                },
+                "top_p": {
+                  "type": "integer",
+                  "title": "Top P",
+                  "default": 1
+                },
+                "moderations": {
+                  "type": "object",
+                  "properties": {
+                    "hap_input": {
+                      "type": "string",
+                      "title": "Hap Input",
+                      "default": "true"
+                    },
+                    "threshold": {
+                      "type": "number",
+                      "title": "Threshold",
+                      "default": 0.75
+                    },
+                    "hap_output": {
+                      "type": "string",
+                      "title": "Hap Output",
+                      "default": "true"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "title": "classifyLLMParams"
+        },
+        "classifyRequest": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "title": "Question"
+            },
+            "llm_params": {
+              "$ref": "#/components/schemas/classifyLLMParams"
+            }
+          },
+          "required": [
+            "question"
+          ],
+          "title": "classifyRequest"
+        },
+        "classifyResponse": {
+          "type": "object",
+          "properties": {
+            "response": {
+              "type": "string",
+              "title": "Response"
+            }
+          },
+          "required": [
+            "response"
+          ],
+          "title": "classifyResponse"
+        },
+        "HTTPValidationError": {
+          "type": "object",
+          "properties": {
+            "detail": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "title": "Detail"
+            }
+          },
+          "title": "HTTPValidationError"
+        },
+        "ValidationError": {
+          "type": "object",
+          "properties": {
+            "loc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+}

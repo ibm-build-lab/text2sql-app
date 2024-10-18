@@ -1,0 +1,78 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0",
+    "description": "Sequifi IBM Watson Webhook"
+  },
+  "servers": [
+    {
+      "url": "https://{route_url}",
+      "description": "The route to the application hosting the ibm_watsonx_webhook",
+      "variables": {
+        "route_url": {
+          "default": "api.sstage.sequifi.com",
+          "description": "The portion of the Route URL that follows https://"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/public/api/ibm_watson_webhook": {
+      "post": {
+        "description": "handle response from IBM watsonx Assistant SQL PoC bot",
+        "summary": "wx_webhook",
+        "operationId": "wx_webhook_wx_webhook_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sequifi_webhook_response"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sequifi_webhook_request"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "sequifi_webhook_request": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "title": "input"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "sequifi_webhook_request"
+      },
+      "sequifi_webhook_response": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "type": "object",
+            "title": "Response"
+          }
+        },
+        "title": "sequifi_webhook_response"
+      }
+    }
+  }
+}
