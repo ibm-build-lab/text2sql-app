@@ -2,7 +2,7 @@
 
 This README will guide you through the steps to install the project locally and deploy it on OpenShift or IBM Code Engine. Additionally, you will learn how to access the Swagger documentation once the project is deployed.
 
-For this application to retrieve the proper prompts, you will need to create prompt templates and prompote them to a deployment space withing watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
+For this application to retrieve the proper prompts, you will need to create prompt templates and promote them to a deployment space withing watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
 ## How to Install Locally
 
 To install this project locally, follow these steps:
