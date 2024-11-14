@@ -4,6 +4,8 @@ This application provides APIs to help with natural language text to SQL generat
 
 For this application to retrieve the proper prompts, you must create prompt templates and promote them to a deployment space within watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
 
+We provide some prompt templates in the [prompts](.prompts) subdirectory.  At a minimum, the `promptClassify` and `promptSQL` need to be created for this application to work as is. 
+
 This README will guide you through installing the project locally and deploying it on OpenShift or IBM Code Engine. Additionally, you will learn how to access the Swagger documentation once the project is deployed.
 
 ## How to Install Locally
