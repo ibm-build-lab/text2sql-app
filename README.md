@@ -1,10 +1,10 @@
 # Watsonx Text to SQL Application
 
-This application provides apis to help with natural language text to sql generation using watsonx.ai. The assumption is that sql tables are added to the prompt using a prompt template.  The natural language request is first classified to determine if it is a reasonable sql query, then the SQL is generated and run against whatever database is connected. 
+This application provides APIs to help with natural language text to SQL generation using watsonx.ai. The assumption is that SQL tables are added to the prompt using a prompt template.  The natural language request is first classified to determine if it is a reasonable SQL query, then the SQL is generated and run against whatever database is connected. 
 
-This README will guide you through the steps to install the project locally and deploy it on OpenShift or IBM Code Engine. Additionally, you will learn how to access the Swagger documentation once the project is deployed.
+This README will guide you through installing the project locally and deploying it on OpenShift or IBM Code Engine. Additionally, you will learn how to access the Swagger documentation once the project is deployed.
 
-For this application to retrieve the proper prompts, you will need to create prompt templates and promote them to a deployment space withing watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
+For this application to retrieve the proper prompts, you must create prompt templates and promote them to a deployment space within watsonx.ai.  For steps to do this, refer to [How to handle using dynamic prompt templates with watsonx.ai](./dynamic_templates.md)
 ## How to Install Locally
 
 To install this project locally, follow these steps:
