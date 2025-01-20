@@ -5,6 +5,8 @@ import sys
 import time
 import jaydebeapi
 import pymysql
+import prestodb
+import requests
 
 from pymongo import MongoClient
 #from utils import CloudObjectStorageReader, CustomWatsonX, create_sparse_vector_query_with_model, create_sparse_vector_query_with_model_and_filter
@@ -32,20 +34,8 @@ from ibm_watson_machine_learning.foundation_models.prompts import PromptTemplate
 from ibm_watson_machine_learning.foundation_models.utils.enums import PromptTemplateFormats
 import pandas as pd
 
-# wd
-#from ibm_watson import DiscoveryV2
-#from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
 # Custom type classes
-# from customTypes.ingestRequest import ingestRequest
-# from customTypes.ingestResponse import ingestResponse
-# from customTypes.queryLLMRequest import queryLLMRequest
-# from customTypes.queryLLMResponse import queryLLMResponse
-# from customTypes.queryWDLLMRequest import queryWDLLMRequest
-# from customTypes.queryWDLLMResponse import queryWDLLMResponse
-#from customTypes.watsonchatRequest import watsonchatRequest
-#from customTypes.watsonchatRequest import LLMParams,Parameters,Moderations
-#from customTypes.watsonchatResponse import watsonchatResponse
 from customTypes.classifyRequest import classifyRequest
 from customTypes.classifyResponse import classifyResponse
 from customTypes.texttosqlRequest import texttosqlRequest
@@ -72,6 +62,28 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 # Token to IBM Cloud
 ibm_cloud_api_key = os.environ.get("IBM_CLOUD_API_KEY")
 project_id = os.environ.get("WX_PROJECT_ID")
+wx_deployment_url = os.environ.get("WX_DEPLOYMENT_URL")
+
+def get_auth_token(api_key):
+    auth_url = "https://iam.cloud.ibm.com/identity/token"
+    
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+    }
+    
+    data = {
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+        "apikey": api_key
+    }
+    response = requests.post(auth_url, headers=headers, data=data, verify=False)
+    
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    else:
+        raise Exception("Failed to get authentication token")
+    
+#iam_token = get_auth_token(os.getenv("IBM_CLOUD_API_KEY", None))
 
 # wxd creds
 # wxd_creds = {
@@ -127,13 +139,16 @@ mdb_creds = {
     "tls_location": os.environ.get("MDB_TLS_LOCATION")
 }
 
-# Create a global client connection to elastic search
-# async_es_client = AsyncElasticsearch(
-#     wxd_creds["wxdurl"],
-#     basic_auth=(wxd_creds["username"], wxd_creds["password"]),
-#     verify_certs=False,
-#     request_timeout=3600,
-# )
+presto_creds = {
+    "db_hostname": os.environ.get("PRESTO_HOSTNAME"),
+    "db_port": os.environ.get("PRESTO_PORT"),
+    "db_user": os.environ.get("PRESTO_USERNAME"),
+    "db_password": os.environ.get("PRESTO_PASSWORD"),
+    "db_catalog": os.environ.get("PRESTO_CATALOG"),
+    "db_schema": os.environ.get("PRESTO_SCHEMA"),
+    "tls_location": os.environ.get("PRESTO_TLS_LOCATION")
+}
+
 
 # Create a watsonx client cache for faster calls.
 custom_watsonx_cache = {}
@@ -150,7 +165,6 @@ async def get_api_key(api_key_header: str = Security(api_key_header)):
 @app.get("/")
 def index():
     return {"Hello": "World"}
-
 
 @app.post("/classify")
 async def classify(request: classifyRequest, api_key: str = Security(get_api_key)):
@@ -179,13 +193,12 @@ async def texttosql(request: texttosqlRequest, api_key: str = Security(get_api_k
     print("Request: " + request.question)
     nl_query = request.question
     dbtype = request.dbtype
-    user_id = request.user_id
     llm_params = request.llm_params
-
-    watsonxSQLResponse = watsonx (nl_query,"promptSQL", user_id, llm_params)
+    print("abount to run watsonx")
+    watsonxSQLResponse = watsonx (nl_query,"promptSQL", llm_params)
 
     sql_query_from_watsonx = watsonxSQLResponse.replace('\n','').replace('Output:','').replace(';','')
-
+    #sql_query_from_watsonx = "select * from tickets_stg"
     nlResponse = {}
     try:
       nlResponse['nl_question'] = nl_query
@@ -203,6 +216,7 @@ async def texttosql(request: texttosqlRequest, api_key: str = Security(get_api_k
 # Caching database connection
 db_connections = {}
 async def get_db_connection(dbtype):
+    print("in connections")
     if dbtype in db_connections:
         return db_connections[dbtype]
 
@@ -228,6 +242,18 @@ async def get_db_connection(dbtype):
         host = str(mdb_creds["db_hostname"])
         port = str(mdb_creds["db_port"])  # default MongoDB port
         conn =  MongoClient(f'mongodb://{username}:{password}@{host}:{port}',tls=True,tlsCAFile=tls_ca_file)
+    elif dbtype == "PRESTO":
+        #print("in presto" + str(presto_creds["db_password"]) + " " + str(presto_creds["db_user"]) + " " + str(presto_creds["db_hostname"]))
+        with prestodb.dbapi.connect(
+            host=str(presto_creds["db_hostname"]),
+            port=str(presto_creds["db_port"]),
+            user=str(presto_creds["db_user"]),
+            catalog=str(presto_creds["db_catalog"]),
+            schema=str(presto_creds["db_schema"]),
+            http_scheme='https',
+            auth=prestodb.auth.BasicAuthentication(str(presto_creds["db_user"]), str(presto_creds["db_password"]))
+            )as conn:
+             conn._http_session.verify = 'certs/presto.crt'
     else:
         raise ValueError("Unsupported database type")
 
@@ -261,7 +287,7 @@ async def queryexec(query, dbtype):
     print("Response from queryexec: "+ str(response))
     return response
 
-def get_latest_prompt_template(promptType, user_id):
+def get_latest_prompt_template(promptType):
     prompt_mgr = PromptTemplateManager(
         credentials={
             "apikey": os.environ.get("IBM_CLOUD_API_KEY"),
@@ -289,12 +315,12 @@ def get_latest_prompt_template(promptType, user_id):
     latest_prompt_id = latest_record['ID']
 
     # Load the prompt template using the latest ID and format type as string
-    loaded_prompt_template_string = prompt_mgr.load_prompt(latest_prompt_id, PromptTemplateFormats.STRING, prompt_variables={"userid": user_id})
+    loaded_prompt_template_string = prompt_mgr.load_prompt(latest_prompt_id, PromptTemplateFormats.STRING, prompt_variables={"input": "test"})
     print(loaded_prompt_template_string)
     return loaded_prompt_template_string
 
 #@app.post("/watsonx")
-def watsonx(input, promptType, user_id, llm_params):
+def watsonx(input, promptType, llm_params):
     generate_params = {
         GenParams.MIN_NEW_TOKENS: llm_params.parameters.min_new_tokens,
         GenParams.MAX_NEW_TOKENS: llm_params.parameters.max_new_tokens,
@@ -304,31 +330,25 @@ def watsonx(input, promptType, user_id, llm_params):
         GenParams.STOP_SEQUENCES: llm_params.parameters.stop_sequences,
         GenParams.TOP_K: llm_params.parameters.top_k,
     }
+    iam_token = get_auth_token(os.getenv("IBM_CLOUD_API_KEY", None))
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {iam_token}"
+    }
+    scoring_payload = {
+                            "parameters": {
+                                "prompt_variables": {
+                                    "input" : input
+                                }
+                            }
+                        }
 
-    model = Model(
-        model_id=llm_params.model_id,
-        params=generate_params,
-        credentials={
-            "apikey": os.environ.get("IBM_CLOUD_API_KEY"),
-            "url": os.environ.get("WX_URL"),
-        },
-        project_id=os.environ.get("WX_PROJECT_ID")
-    )
-
-    # Load prompt locally
-    #promptText=open("./prompts/"+promptType,"r")
-    #prompt=promptText.read()
-    
-    # Load prompt from watsonx.ai deployment space
-    prompt=get_latest_prompt_template(promptType, user_id)
-
-    #prompt=getprompt.replace ('${userid}', user_id)
-    #prompt=getprompt.replace ('${userid}', str(user_id))
-    finalInput=prompt + "\n\n" + "Input: " + input + "\n"
-    generated_response = model.generate(prompt=finalInput)
-    response=generated_response['results'][0]['generated_text']
-    return response
-
+    response = requests.post(wx_deployment_url, headers=headers, json=scoring_payload, verify=False).json()
+    print("RESPONSE : " + str(response))
+    message = response['results'][0]['generated_text']
+    print(" message: " + str(message))
+    return message
 if __name__ == '__main__':
     if 'uvicorn' not in sys.argv[0]:
         uvicorn.run("app:app", host='0.0.0.0', port=4050, reload=True)
