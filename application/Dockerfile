@@ -12,7 +12,7 @@ RUN pip3 install -r requirements.txt
 # Copy your FastAPI Python script to the container
 COPY . .
 
-RUN python3 prereqs.py
+#RUN python3 prereqs.py
 
 EXPOSE 4050
 
