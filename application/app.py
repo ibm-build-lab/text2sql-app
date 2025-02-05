@@ -280,7 +280,7 @@ async def get_db_connection(dbtype):
             http_scheme='https',
             auth=prestodb.auth.BasicAuthentication(str(presto_creds["db_user"]), str(presto_creds["db_password"]))
             )as conn:
-             conn._http_session.verify = 'certs/presto.crt'
+             conn._http_session.verify = str(presto_creds["tls_location"])
     else:
         raise ValueError("Unsupported database type")
 
